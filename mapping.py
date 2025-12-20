@@ -1,69 +1,83 @@
 from __future__ import annotations
+import os
+from dingtalk_recipients import load_dingtalk_recipients, DingtalkRecipientConfigError
+
+
+def _get_env_or_raise(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Environment variable {name} is required but not set or is empty.")
+    return value
+
 
 class mapping:
-    # ----------邮件内容提取相关----------
-    # 业务相关的关键词
+    # ----------Email content extraction----------
+    # Business keywords
     ECO_requried_subject = "ECO审批流程"
 
-    # 邮件头部关键字段
+    # Email header fields
     subject = "Subject"
     sent_date = "Date"
     message_id = "Message-ID"
 
-    # 邮件内容关键字段
+    # Email body fields
     ecn_index = "ecn编码"
     ecn_name = "ecn名称"
     product_name = "产品名称"
     product_organizer = "工作负责人"
 
-    # ----------钉钉待办相关----------
+    # ----------DingTalk TODO settings----------
 
-    # 代办创建日期（相对于邮件发送日期）
-    time_month_to_create_todo = 0  # 月
-    time_days_to_create_todo = 0  # 天
-    # 代办截止日期（相对于邮件发送日期+代办创建日期偏移）
-    due_date_from_created = 1 # 周
-    # 代办截止日期（绝对时间）
-    due_time_hour = 18  # 时
-    due_time_minute = 0  # 分
-    due_time_second = 0  # 秒
+    # TODO creation date offset from sent time
+    time_month_to_create_todo = 0  # month offset
+    time_days_to_create_todo = 0  # day offset
+    # Due date offset after creation offset
+    due_date_from_created = 1 # week offset
+    # Absolute due time
+    due_time_hour = 18  # hour
+    due_time_minute = 0  # minute
+    due_time_second = 0  # second
 
-    # ----------邮件搜索条件-----------
-    # IMAP 搜索窗口：在目标筛选日期前额外回溯的天数
-    # 用于弥补脚本停机或网络闪断时可能错过的邮件
-    mapping_search_window = 10  # 天
+    # ----------Email search window-----------
+    # IMAP search window days before target date
+    # Helps cover outages or network drops
+    mapping_search_window = 10  # days
 
-    # ----------本地状态文件----------
-    # 用于存储已处理邮件的 JSON 文件名和时间格式
+    # ----------Local state file----------
+    # JSON filename and timestamp format for processed mail
     json_fn = "processed_messages.json"
     json_time_format = "%Y-%m-%d %H:%M:%S"
 
-    # -----------钉钉待办人-----------
-    # UserID：需要从钉钉开发者平台获取
-    # [0]: 朱莹莹
-    # [1]: 高哲
-    DingDing_ids = [
-        # "16853271524727069",
-        # "17182654619213200",
-    ]
+    # -----------DingTalk assignees-----------
+    # UserIDs from DingTalk config file
+    try:
+        _recipients = load_dingtalk_recipients("config/dingtalk_recipients.json")
+    except DingtalkRecipientConfigError as e:
+        raise RuntimeError(str(e))
+    DingDing_ids = _recipients.get("eco_todo_user_ids", [])
 
-    # ----------报错分发代办----------
+    # ----------Error TODO forwarding----------
     error_subject = "ECO自动创建代办-错误"
     error_description = "在处理邮件时发生错误，请及时处理。"
-    # 接收报错代办的钉钉 UserID
-    error_user_ids = "16606118044638944" #Viego
-    # 报错代办截止时间（绝对时间）
+    # DingTalk UserIDs to receive error TODO
+    error_user_ids = _recipients.get("error_todo_user_ids", [])
+    if not error_user_ids:
+        raise RuntimeError(
+            "error_todo_user_ids must include at least one user ID in "
+            "config/dingtalk_recipients.json."
+        )
+    # Absolute due time for error TODO
     error_due_time_hour = 18
     error_due_time_minute = 0
     error_due_time_second = 0
 
-    # ----------邮箱和钉钉应用配置----------
-    # 邮箱 IMAP 服务器配置
-    mail_address = "eco.service@intalight.com"
-    mail_password = "RzvC4d82aB"
+    # ----------Mail and DingTalk config----------
+    # IMAP server settings
+    mail_address = _get_env_or_raise("ECO_MAIL_ADDRESS")
+    mail_password = _get_env_or_raise("ECO_MAIL_PASSWORD")
     imap_host = "imap.qiye.aliyun.com"
     port = 993
 
-    # 钉钉应用配置
-    client_id = "dingawvuo4tev3ugi9fm"
-    client_secret = "F_ubFc2GC3MwmyBB9KrmcZkHjoSs2RbKX9cYtUri5Jqlgf30dyivLh21JFZO681d"
+    # DingTalk app settings
+    client_id = _get_env_or_raise("DINGTALK_CLIENT_ID")
+    client_secret = _get_env_or_raise("DINGTALK_CLIENT_SECRET")

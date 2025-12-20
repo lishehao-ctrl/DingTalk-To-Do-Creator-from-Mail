@@ -1,0 +1,4 @@
+{
+  "eco_todo_user_ids": ["<USER_ID_1>", "<USER_ID_2>"],
+  "error_todo_user_ids": ["<ERROR_USER_ID_1>"]
+}

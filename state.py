@@ -5,7 +5,7 @@ from typing import Dict
 from mapping import mapping
 
 def fn_relative(fn=None, sub_folder=None):
-    """获取相对于当前脚本的文件路径"""
+    """Get file path relative to this script."""
     if fn and os.path.isabs(fn):
         return fn
     else:
@@ -15,19 +15,19 @@ def fn_relative(fn=None, sub_folder=None):
             hd, _ = os.path.split(os.path.realpath(__file__))
 
         if sub_folder is None:
-            # 没有 sub_folder，也没有 fn → 就是程序目录
+            # No sub_folder and no fn → use program directory
             path = hd if fn is None else os.path.join(hd, fn)
         else:
-            # 先拼子目录
+            # Build subfolder path first
             folder = os.path.join(hd, sub_folder)
             if fn is None:
-                path = folder   # 只要文件夹路径
+                path = folder   # Only need folder path
             else:
                 path = os.path.join(folder, fn)
 
         path = os.path.realpath(path)
 
-        # 如果是文件 → 确保父目录存在；如果是目录 → 确保自己存在
+        # If file ensure parent exists; if folder ensure folder exists
         if fn is None:
             os.makedirs(path, exist_ok=True)
         else:
@@ -36,16 +36,13 @@ def fn_relative(fn=None, sub_folder=None):
         return path
 
 def save_json(data: Dict):
-    """保存已处理的消息状态"""
+    """Save processed message state."""
     fp = fn_relative(mapping.json_fn)
     with open(fp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_json() -> Dict:
-    """
-    加载已处理的消息状态
-    如果文件不存在或无法解析，则创建空文件并返回空字典
-    """
+    """Load processed message state, creating an empty file if missing or invalid."""
     fp = fn_relative(mapping.json_fn)
     try:
         with open(fp, "r", encoding="utf-8") as f:
