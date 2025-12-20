@@ -75,8 +75,14 @@ class mapping:
     # IMAP server settings
     mail_address = _get_env_or_raise("ECO_MAIL_ADDRESS")
     mail_password = _get_env_or_raise("ECO_MAIL_PASSWORD")
-    imap_host = "imap.qiye.aliyun.com"
-    port = 993
+    imap_host = os.getenv("ECO_IMAP_HOST", "imap.qiye.aliyun.com")
+    port_str = os.getenv("ECO_IMAP_PORT", "993")
+    try:
+        port = int(port_str)
+    except ValueError as e:
+        raise RuntimeError("ECO_IMAP_PORT must be an integer") from e
+    if not (1 <= port <= 65535):
+        raise RuntimeError("ECO_IMAP_PORT must be between 1 and 65535")
 
     # DingTalk app settings
     client_id = _get_env_or_raise("DINGTALK_CLIENT_ID")
