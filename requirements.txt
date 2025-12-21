@@ -1,1 +1,9 @@
+requests
+python-dateutil
+beautifulsoup4
 python-dotenv
+alibabacloud-dingtalk
+alibabacloud-tea-openapi
+alibabacloud-tea-util
+alibabacloud-openapi-util
+alibabacloud-tea
